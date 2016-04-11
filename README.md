@@ -2,7 +2,7 @@
 
 This is a aggregated Social Feed app for consuming Twitter and Facebook in a single timeline.
 
-Time spent: `6`
+Time spent: `6 hrs`
 
 ### Features
 

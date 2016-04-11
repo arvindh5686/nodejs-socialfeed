@@ -99,6 +99,84 @@ module.exports = (app) => {
     res.end();
   }))
 
+  app.get('/reply/:id', isLoggedIn, then(async (req, res) => {
+    let twitterClient = new Twitter({
+      consumer_key: twitterConfig.consumerKey,
+      consumer_secret: twitterConfig.consumerSecret,
+      access_token_key: req.user.twitter.token,
+      access_token_secret: twitterConfig.accessTokenSecret
+    });
+    let tweet = await twitterClient.promise.get('/statuses/show/' + req.params.id);
+    tweet = tweet[0];
+    let post = {
+      id: tweet.id_str,
+      image: tweet.user.profile_image_url,
+      text: tweet.text,
+      name: tweet.user.name,
+        //  username: '@'.tweet.user.screen_name,
+      liked: tweet.favorited,
+      //network: networks.twitter
+    }
+    res.render('reply.ejs', {post})
+  }))
+
+  app.post('/reply/:id', isLoggedIn, then(async (req, res) => {
+    let status = req.body.reply;
+
+    let twitterClient = new Twitter({
+      consumer_key: twitterConfig.consumerKey,
+      consumer_secret: twitterConfig.consumerSecret,
+      access_token_key: req.user.twitter.token,
+      access_token_secret: twitterConfig.accessTokenSecret
+    });
+
+    let id = req.params.id;
+    let tweet = await twitterClient.promise.get('/statuses/show/' + id);
+    
+    tweet = tweet[0];
+    
+    await twitterClient.promise.post('/statuses/update', {
+      in_reply_to_status_id: id,
+      status: '@' + tweet.user.screen_name + ' ' + status
+    });
+    res.redirect('/timeline')
+  }))
+
+  app.get('/share/:id', isLoggedIn, then(async (req, res) => {
+    let twitterClient = new Twitter({
+      consumer_key: twitterConfig.consumerKey,
+      consumer_secret: twitterConfig.consumerSecret,
+      access_token_key: req.user.twitter.token,
+      access_token_secret: twitterConfig.accessTokenSecret
+    });
+    let tweet = await twitterClient.promise.get('/statuses/show/' + req.params.id);
+    tweet = tweet[0];
+    let post = {
+      id: tweet.id_str,
+      image: tweet.user.profile_image_url,
+      text: tweet.text,
+      name: tweet.user.name,
+        //  username: '@'.tweet.user.screen_name,
+      liked: tweet.favorited,
+      //network: networks.twitter
+    }
+    res.render('share.ejs', {post})
+  }))
+
+  app.post('/share/:id', isLoggedIn, then(async (req, res) => {
+    let twitterClient = new Twitter({
+      consumer_key: twitterConfig.consumerKey,
+      consumer_secret: twitterConfig.consumerSecret,
+      access_token_key: req.user.twitter.token,
+      access_token_secret: twitterConfig.accessTokenSecret
+    });
+
+    let id = req.params.id;
+
+    let tweet = await twitterClient.promise.post('/statuses/retweet/' + id);
+    res.redirect('/timeline')
+  }))
+
   app.get('/timeline', isLoggedIn, then(async (req, res) => {
     try{
       let twitterClient = new Twitter({

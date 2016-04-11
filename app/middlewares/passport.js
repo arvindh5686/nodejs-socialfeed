@@ -42,29 +42,9 @@ function loadPassportStrategy(OauthStrategy, config, userField) {
 
   async function authCB(req, token, _ignored_, account) {
       let accountId = userField + '.id';
-      console.log(accountId);
       let user = await User.promise.findOne({accountId: account.id})
-      //if (req.user && req.user[userField].id === user[userField].id) {
-      if (req.user) {  
-        
-      } else {
-        
-      }
 
-      console.log('req.user: ', req.user);
-      if (! user) {
-        user = new User({});
-      }
-
-      user[userField].id = account.id;
-      user[userField].name = account.displayName;
-      user[userField].username = account.username;
-      user[userField].token = token;
-      user[userField].secret = _ignored_;
-      console.log(user);
-
-     // req.user[userField] = user[userField];
-      return await user.save();
+      //TODO: complete authentication / authorization
       // 1. Load user from store by matching user[userField].id && account.id
       // 2. If req.user exists, we're authorizing (linking account to an existing user)
       // 2a. Ensure it's not already associated with another user
@@ -72,6 +52,27 @@ function loadPassportStrategy(OauthStrategy, config, userField) {
       // 3. If req.user !exist, we're authenticating (logging in an existing user)
       // 3a. If Step 1 failed (existing user for 3rd party account does not already exist), create a user and link this account (Otherwise, user is logging in).
       // 3c. Return user
+      //if (req.user && req.user[userField].id === user[userField].id) {
+      if (req.user) {  
+        
+      } else {
+        
+      }
+
+      if (! user) {
+        user = new User({});
+      }
+
+      user[userField].id = account.id;
+      user[userField].name = account.displayName;
+      user[userField].username = account.username;
+      user[userField].email = account.email;
+      user[userField].token = token;
+      user[userField].secret = _ignored_;
+      console.log(user[userField]);
+
+     // req.user[userField] = user[userField];
+      return await user.save();
   }
 }
 

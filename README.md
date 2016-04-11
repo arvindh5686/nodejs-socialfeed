@@ -12,14 +12,14 @@ Time spent: `<Number of hours spent>`
 - [X] User can view the 20 latest entries on an aggregated timeline.
 - [X] Timeline entries include user profile picture, username, content, origin social network identifier and timestamp.
 - [X] In the timeline, user can like and unlike posts.
-- [ ] User can click share in the timeline, and share with a custom message on a separate page.
-- [ ] User can click reply in the timeline, and submit a reply on a separate page.
-- [ ] User can click compose anywhere, and submit a new post on a separate page.
+- [X] User can click share in the timeline, and share with a custom message on a separate page.
+- [X] User can click reply in the timeline, and submit a reply on a separate page.
+- [X] User can click compose anywhere, and submit a new post on a separate page.
 
 
 #### Optional
 
-- [ ] User can sign in and connect to Facebook using `passport`.
+- [X] User can sign in and connect to Facebook using `passport`.
 - [ ] User can view Facebook entries in the timeline
 - [ ] User can "compose", "like", "unlike", "reply" and "share" Facebook entries
 - [ ] The signed in user will be persisted across server restarts

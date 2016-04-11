@@ -11,12 +11,13 @@ let flash = require('connect-flash')
 
 let passportMiddleware = require('./app/middlewares/passport')
 
-const NODE_ENV = process.env.NODE_ENV
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 let app = express(),
   config = requireDir('./config', {recurse: true}),
   port = process.env.PORT || 8000
 
+app.config = {auth: config.auth[NODE_ENV]};
 passportMiddleware.configure(config.auth[NODE_ENV])
 app.passport = passportMiddleware.passport
 

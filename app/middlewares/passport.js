@@ -6,120 +6,106 @@ let FacebookStrategy = require('passport-facebook').Strategy
 let TwitterStrategy = require('passport-twitter').Strategy
 let config = require('../../config/auth')
 require('songbird')
-// Handlers
+    // Handlers
 async function localAuthHandler(email, password) {
-  console.log(User);
-  let user = await User.promise.findOne({'local.email': email})
-  if (!user || email !== user.local.email) {
-    return [false, {message: 'Invalid username'}]
-  }
+    console.log(User);
+    let user = await User.promise.findOne({ 'local.email': email })
+    if (!user || email !== user.local.email) {
+        return [false, { message: 'Invalid username' }]
+    }
 
-  if (!await user.validatePassword(password)) {
-    return [false, {message: 'Invalid password'}]
-  }
-  return user
+    if (!await user.validatePassword(password)) {
+        return [false, { message: 'Invalid password' }]
+    }
+    return user
 }
 
 async function localSignupHandler(email, password) {
-  email = (email || '').toLowerCase()
-  // Is the email taken?
-  if (await User.promise.findOne({email})) {
-    return [false, {message: 'That email is already taken.'}]
-  }
+    email = (email || '').toLowerCase()
+        // Is the email taken?
+    if (await User.promise.findOne({ email })) {
+        return [false, { message: 'That email is already taken.' }]
+    }
 
-  // create the user
-  let user = new User()
-  user.local.email = email
-  // Use a password hash instead of plain-text
-  user.local.password = await user.generateHash(password)
-  return await user.save()
+    // create the user
+    let user = new User()
+    user.local.email = email
+        // Use a password hash instead of plain-text
+    user.local.password = await user.generateHash(password)
+    return await user.save()
 }
 
 // 3rd-party Auth Helper
 function loadPassportStrategy(OauthStrategy, config, userField) {
-  config.passReqToCallback = true
-  passport.use(new OauthStrategy(config, wrap(authCB, {spread: true})))
+    config.passReqToCallback = true
+    passport.use(new OauthStrategy(config, wrap(authCB, { spread: true })))
 
-  async function authCB(req, token, _ignored_, account) {
-      let accountId = userField + '.id';
-      let user = await User.promise.findOne({accountId: account.id})
+    async function authCB(req, token, _ignored_, account) {
+        let accountId = userField + '.id';
 
-      //TODO: complete authentication / authorization
-      // 1. Load user from store by matching user[userField].id && account.id
-      // 2. If req.user exists, we're authorizing (linking account to an existing user)
-      // 2a. Ensure it's not already associated with another user
-      // 2b. Link account
-      // 3. If req.user !exist, we're authenticating (logging in an existing user)
-      // 3a. If Step 1 failed (existing user for 3rd party account does not already exist), create a user and link this account (Otherwise, user is logging in).
-      // 3c. Return user
-      //if (req.user && req.user[userField].id === user[userField].id) {
-      if (req.user) {  
+        let user;
+        if (req.user) {
+            user = await User.promise.findById(req.user.id)
+        } else {
+            user = await User.promise.findOne({ accountId: account.id });
+        }
+
+        if (!user) user = new User();
         
-      } else {
-        
-      }
+        user[userField].id = account.id;
+        user[userField].token = token;
+        user[userField].secret = _ignored_;
+        user[userField].name = account.displayName;
+        user[userField].username = account.username;
 
-      if (! user) {
-        user = new User({});
-      }
-
-      user[userField].id = account.id;
-      user[userField].name = account.displayName;
-      user[userField].username = account.username;
-      user[userField].email = account.email;
-      user[userField].token = token;
-      user[userField].secret = _ignored_;
-      console.log(user[userField]);
-
-     // req.user[userField] = user[userField];
-      return await user.save();
-  }
+        return await user.save();
+    }
 }
 
 function configure(CONFIG) {
-  // Required for session support / persistent login sessions
-  passport.serializeUser(wrap(async (user) => user._id))
-  passport.deserializeUser(wrap(async (id) => {
-    return await User.promise.findById(id)
-  }))
+    // Required for session support / persistent login sessions
+    passport.serializeUser(wrap(async(user) => user._id))
+    passport.deserializeUser(wrap(async(id) => {
+        return await User.promise.findById(id)
+    }))
 
-  /**
-   * Local Auth
-   */
-  let localLoginStrategy = new LocalStrategy({
-    usernameField: 'email', // Use "email" instead of "username"
-    failureFlash: true // Enable session-based error logging
-  }, wrap(localAuthHandler, {spread: true}))
+    /**
+     * Local Auth
+     */
+    let localLoginStrategy = new LocalStrategy({
+        usernameField: 'email', // Use "email" instead of "username"
+        failureFlash: true // Enable session-based error logging
+    }, wrap(localAuthHandler, { spread: true }))
 
-  let localSignupStrategy = new LocalStrategy({
-    usernameField: 'email',
-    failureFlash: true
-  }, wrap(localSignupHandler, {spread: true}))
+    let localSignupStrategy = new LocalStrategy({
+        usernameField: 'email',
+        failureFlash: true
+    }, wrap(localSignupHandler, { spread: true }))
 
-  passport.use('local-login', localLoginStrategy)
-  passport.use('local-signup', localSignupStrategy)
+    passport.use('local-login', localLoginStrategy)
+    passport.use('local-signup', localSignupStrategy)
 
-  /**
-   * 3rd-Party Auth
-   */
+    /**
+     * 3rd-Party Auth
+     */
 
-   loadPassportStrategy(FacebookStrategy, {
+    loadPassportStrategy(FacebookStrategy, {
         clientID: CONFIG.facebook.consumerKey,
         clientSecret: CONFIG.facebook.consumerSecret,
         callbackURL: CONFIG.facebook.callbackUrl
     }, 'facebook')
 
-   loadPassportStrategy(TwitterStrategy, {
-        consumerKey: CONFIG.twitter.consumerKey,
-        consumerSecret: CONFIG.twitter.consumerSecret,
-        callbackURL: CONFIG.twitter.callbackUrl
-    }, 'twitter')
-  // loadPassportStrategy(LinkedInStrategy, {...}, 'linkedin')
-  // loadPassportStrategy(FacebookStrategy, {...}, 'facebook')
-  // loadPassportStrategy(GoogleStrategy, {...}, 'google')
-  // loadPassportStrategy(TwitterStrategy, {...}, 'twitter')
+    loadPassportStrategy(TwitterStrategy, {
+            consumerKey: CONFIG.twitter.consumerKey,
+            consumerSecret: CONFIG.twitter.consumerSecret,
+            callbackURL: CONFIG.twitter.callbackUrl
+        }, 'twitter')
+        // loadPassportStrategy(LinkedInStrategy, {...}, 'linkedin')
+        // loadPassportStrategy(FacebookStrategy, {...}, 'facebook')
+        // loadPassportStrategy(GoogleStrategy, {...}, 'google')
+        // loadPassportStrategy(TwitterStrategy, {...}, 'twitter')
 
-  return passport
+    return passport
 }
 
-module.exports = {passport, configure}
+module.exports = { passport, configure }

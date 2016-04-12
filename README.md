@@ -32,4 +32,4 @@ Time spent: `6 hrs`
 
 ### Walkthrough
 
-![Video Walkthrough](...)
+![Video Walkthrough](nodejs-socialfeed-v1.gif)
